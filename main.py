@@ -6,24 +6,23 @@ import traceback
 from crewai import Agent, Task, Crew  # your crewai agents and related modules
 from github import Github
 from langchain_groq import ChatGroq
+from dotenv import load_dotenv
 
+load_dotenv() 
 
 # ===================================================
 # Environment & GitHub Configuration (update as needed)
 # ===================================================
-# Set API key for Groq
-os.environ["GROQ_API_KEY"] = "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"
 
-# Define LLM Model
 # Define LLM Model
 llm = ChatGroq(
     temperature=0,
     model_name="groq/gemma2-9b-it",
-    api_key="",
+    api_key=os.getenv('GROQ_API_KEY'),
 )
 
 # Set your GitHub token in an environment variable or here:
-GITHUB_TOKEN = "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"
+GITHUB_TOKEN = os.getenv('G_TOKEN')
 GITHUB_USERNAME = "yash25112003"
 REPO_OWNER = "yash25112003"
 REPO_NAME_PART = "ai-book-writer"
