@@ -148,7 +148,7 @@ def main():
 
         # Run planning task using CrewAI
         crew = Crew(agents=[planning_agent], tasks=[plan_book_task])
-        plan_result = crew.kickoff().raw  # ✅ Extract CrewOutput results
+        plan_result = crew.kickoff()  # ✅ Extract CrewOutput results
         plan_text = "\n".join(plan_result)  # ✅ Join list into a string
 
         github_commit(REPO_FULL_NAME, plan_text, plan_filename, "Added book plan")
