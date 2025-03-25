@@ -93,57 +93,32 @@ format_markdown_task = Task(
 # ===================================================
 def github_commit(repo_name, file_content, filename, commit_message):
     """
-    Commit a file to GitHub with improved error handling.
+    Commit a file to GitHub.
     """
     try:
         g = Github(GITHUB_TOKEN)
-        try:
-            repo = g.get_repo(repo_name)
-        except Exception as repo_error:
-            print(f"Error accessing repository {repo_name}: {repo_error}")
-            print(f"Verify: \n- Repository name is correct\n- GitHub token has access\n- Repository exists")
-            return
+        repo = g.get_repo(repo_name)
 
         try:
-            try:
-                contents = repo.get_contents(filename, ref=BRANCH)
-                repo.update_file(contents.path, commit_message, file_content, contents.sha, branch=BRANCH)
-                print(f"Updated {filename} successfully.")
-            except Exception as update_error:
-                repo.create_file(filename, commit_message, file_content, branch=BRANCH)
-                print(f"Created {filename} successfully.")
-
-        except Exception as file_error:
-            print(f"Error processing file {filename}: {file_error}")
+            contents = repo.get_contents(filename, ref=BRANCH)
+            repo.update_file(contents.path, commit_message, file_content, contents.sha, branch=BRANCH)
+            print(f"Updated {filename} successfully.")
+        except:
+            repo.create_file(filename, commit_message, file_content, branch=BRANCH)
+            print(f"Created {filename} successfully.")
 
     except Exception as e:
-        print(f"Unexpected error in github_commit: {e}")
+        print(f"Error committing {filename}: {e}")
         traceback.print_exc()
-
+        
 def list_files(path=""):
     """
-    List files in the GitHub repository path with improved error handling.
+    List files in the GitHub repository path.
     """
     url = f"{BASE_URL}/{path}?ref={BRANCH}"
     headers = {"Authorization": f"token {GITHUB_TOKEN}"}
-    
-    try:
-        response = requests.get(url, headers=headers)
-        
-        if response.status_code == 200:
-            return response.json()
-        elif response.status_code == 404:
-            print(f"Repository or path not found: {url}")
-            print("Verify:\n- Repository name is correct\n- Branch name is correct\n- Path exists")
-        else:
-            print(f"Unexpected status code: {response.status_code}")
-            print(f"Response content: {response.text}")
-        
-        return None
-    
-    except requests.exceptions.RequestException as e:
-        print(f"Request error: {e}")
-        return None
+    response = requests.get(url, headers=headers)
+    return response.json() if response.status_code == 200 else None
 
 def read_file(file_path):
     """
@@ -155,15 +130,30 @@ def read_file(file_path):
     if response.status_code == 200:
         return base64.b64decode(response.json()["content"]).decode("utf-8")
     return None
+    
+def extract_content(crew_result):
+    """
+    Safely extract content from CrewAI result.
+    """
+    try:
+        # If result is a list-like object
+        if hasattr(crew_result, '__iter__') and not isinstance(crew_result, str):
+            return "\n".join(str(item) for item in crew_result)
+        
+        # If result is a string
+        return str(crew_result)
+    except Exception as e:
+        print(f"Error extracting crew result: {e}")
+        return ""
 
 # ===================================================
 # Main Daily Runner
 # ===================================================
 def extract_number(fname):
-    match = re.search(r"chapter(\d+)_", fname)  # Remove extra backslash
+    match = re.search(r"chapter(\d+)_", fname)
     return int(match.group(1)) if match else 0
-
-def main():
+    
+ddef main():
     plan_filename = "book_plan.md"
     plan_content = read_file(plan_filename)
 
@@ -172,8 +162,8 @@ def main():
 
         # Run planning task using CrewAI
         crew = Crew(agents=[planning_agent], tasks=[plan_book_task])
-        plan_result = crew.kickoff()  # ✅ Extract CrewOutput results
-        plan_text = "\n".join(plan_result)  # ✅ Join list into a string
+        plan_result = crew.kickoff()
+        plan_text = extract_content(plan_result)
 
         github_commit(REPO_FULL_NAME, plan_text, plan_filename, "Added book plan")
         chapter_titles = [line.split(".", 1)[1].strip() for line in plan_text.splitlines() if "." in line]
@@ -192,10 +182,9 @@ def main():
 
     next_chapter_number = current_chapter_count + 1
     if next_chapter_number == 4:
-      next_chapter_title = "The Grand Finale"  # Change this title if needed
+      next_chapter_title = "The Grand Finale"
     else:
       next_chapter_title = chapter_titles[next_chapter_number - 1] if next_chapter_number - 1 < len(chapter_titles) else f"Chapter {next_chapter_number}"
-
 
     context_text = "\n".join(
         [f"Excerpt from {fname}: " + read_file(fname)[:300] for fname in chapter_files_sorted[-3:]]
@@ -204,19 +193,17 @@ def main():
     # Run writing task using CrewAI
     write_chapter_task.description = f"Write Chapter {next_chapter_number}: {next_chapter_title}. Context: {context_text}"
     crew = Crew(agents=[writing_agent], tasks=[write_chapter_task])
-    chapter_result = crew.kickoff().raw  # ✅ Extract CrewOutput results
-    chapter_content = "\n".join(chapter_result)  # ✅ Convert list to string
+    chapter_result = extract_content(crew.kickoff())
 
     # Run formatting task using CrewAI
-    format_markdown_task.description = f"Format the following chapter content to ensure correct Markdown structure: {chapter_content}"
+    format_markdown_task.description = f"Format the following chapter content to ensure correct Markdown structure: {chapter_result}"
     crew = Crew(agents=[formatting_agent], tasks=[format_markdown_task])
-    formatted_chapter = crew.kickoff().raw
-    formatted_chapter_content = "\n".join(formatted_chapter)
-
+    formatted_chapter = extract_content(crew.kickoff())
 
     chapter_filename = f"chapter{next_chapter_number}_{next_chapter_title.replace(' ', '_')}.md"
-    github_commit(REPO_FULL_NAME, chapter_content, chapter_filename, f"Added {chapter_filename}")
+    github_commit(REPO_FULL_NAME, formatted_chapter, chapter_filename, f"Added {chapter_filename}")
     print(f"Day {next_chapter_number} completed: {chapter_filename} committed.")
+
 
 if __name__ == "__main__":
     main()
