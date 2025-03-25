@@ -30,7 +30,10 @@ jobs:
         env:
           GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}  # ✅ Pass API key to script
           G_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: python main.py
+        run: |
+          echo "Repository: $GITHUB_REPOSITORY"
+          echo "Ref: $GITHUB_REF"
+          python main.py
 
       - name: ⬆️ Commit and Push Changes (if any)
         env:
@@ -42,4 +45,4 @@ jobs:
           git config --global user.name "${{ secrets.GIT_USERNAME }}"
           git add .
           git diff --staged --quiet || git commit -m "🔄 Auto-update: Commit latest changes"
-          git push
+          git push https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git main
