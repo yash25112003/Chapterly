@@ -17,7 +17,7 @@ load_dotenv()
 # Define LLM Model
 llm = ChatGroq(
     temperature=0,
-    model_name="deepseek-r1-distill-llama-70b",
+    model_name="gemma2-9b-it",
     api_key=os.getenv('GROQ_API_KEY'),
 )
 
@@ -40,6 +40,7 @@ planning_agent = Agent(
     goal="Develop the book's concept, outline, characters, world details, and generate a list of 4 chapter titles in a proper markdown format for making it readable. Use all markdown format structuring for heading and paragraphs to make it readable",
     backstory="An experienced author specializing in planning and structuring novels.",
     verbose=True,
+    allow_delegation=False,  # Disable delegation to avoid format issues
     llm=llm  # ✅ Use Groq model
 )
 
@@ -48,6 +49,7 @@ writing_agent = Agent(
     goal="Write detailed chapters based on the provided outline and chapter titles. Each chapter should be at least 300 words. Use all markdown format structuring for heading and paragraphs to make it readable",
     backstory="A creative writer adept at bringing stories to life.",
     verbose=True,
+    allow_delegation=False,  # Disable delegation to avoid format issues
     llm=llm  # ✅ Use Groq model
 )
 
@@ -56,6 +58,7 @@ formatting_agent = Agent(
     goal="Format and structure the text into a well-structured Markdown document with proper headings, spacing, and readability improvements.",
     backstory="A skilled editor who ensures content is properly formatted for GitHub Markdown preview.",
     verbose=True,
+    allow_delegation=False,  # Disable delegation to avoid format issues
     llm=llm  # ✅ Use Groq model
 )
 
