@@ -93,33 +93,57 @@ format_markdown_task = Task(
 # ===================================================
 def github_commit(repo_name, file_content, filename, commit_message):
     """
-    Commit a file to GitHub.
+    Commit a file to GitHub with improved error handling.
     """
     try:
         g = Github(GITHUB_TOKEN)
-        repo = g.get_repo(repo_name)
+        try:
+            repo = g.get_repo(repo_name)
+        except Exception as repo_error:
+            print(f"Error accessing repository {repo_name}: {repo_error}")
+            print(f"Verify: \n- Repository name is correct\n- GitHub token has access\n- Repository exists")
+            return
 
         try:
-            contents = repo.get_contents(filename, ref=BRANCH)
-            repo.update_file(contents.path, commit_message, file_content, contents.sha, branch=BRANCH)
-            print(f"Updated {filename} successfully.")
-        except:
-            repo.create_file(filename, commit_message, file_content, branch=BRANCH)
-            print(f"Created {filename} successfully.")
+            try:
+                contents = repo.get_contents(filename, ref=BRANCH)
+                repo.update_file(contents.path, commit_message, file_content, contents.sha, branch=BRANCH)
+                print(f"Updated {filename} successfully.")
+            except Exception as update_error:
+                repo.create_file(filename, commit_message, file_content, branch=BRANCH)
+                print(f"Created {filename} successfully.")
+
+        except Exception as file_error:
+            print(f"Error processing file {filename}: {file_error}")
 
     except Exception as e:
-        print(f"Error committing {filename}: {e}")
-
+        print(f"Unexpected error in github_commit: {e}")
+        traceback.print_exc()
 
 def list_files(path=""):
     """
-    List files in the GitHub repository path.
+    List files in the GitHub repository path with improved error handling.
     """
     url = f"{BASE_URL}/{path}?ref={BRANCH}"
     headers = {"Authorization": f"token {GITHUB_TOKEN}"}
-    response = requests.get(url, headers=headers)
-    return response.json() if response.status_code == 200 else None
-
+    
+    try:
+        response = requests.get(url, headers=headers)
+        
+        if response.status_code == 200:
+            return response.json()
+        elif response.status_code == 404:
+            print(f"Repository or path not found: {url}")
+            print("Verify:\n- Repository name is correct\n- Branch name is correct\n- Path exists")
+        else:
+            print(f"Unexpected status code: {response.status_code}")
+            print(f"Response content: {response.text}")
+        
+        return None
+    
+    except requests.exceptions.RequestException as e:
+        print(f"Request error: {e}")
+        return None
 
 def read_file(file_path):
     """
