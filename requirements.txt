@@ -1,5 +1,6 @@
 crewai
 requests
+python-dotenv
 PyGithub
 langchain-groq
 crewai_tools 
