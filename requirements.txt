@@ -1,0 +1,7 @@
+crewai
+requests
+PyGithub
+langchain-groq
+crewai_tools 
+langchain_community 
+numpy
