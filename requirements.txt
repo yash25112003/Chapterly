@@ -2,7 +2,6 @@ crewai
 requests
 python-dotenv
 PyGithub
-langchain-groq
-crewai_tools 
+langchain-groq 
 langchain_community 
 numpy
