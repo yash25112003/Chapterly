@@ -1,10 +1,10 @@
 name: Automate Python Script
-
 on:
   schedule:
     - cron: "0 0 * * *"  # Runs daily at midnight UTC
   workflow_dispatch:  # Allows manual execution from GitHub Actions
-
+permissions:
+  contents: write  # Grant write permissions to the GITHUB_TOKEN
 jobs:
   run-script:
     runs-on: ubuntu-latest
@@ -12,37 +12,29 @@ jobs:
     steps:
       - name: ✅ Checkout Repository
         uses: actions/checkout@v3
-
       - name: 🐍 Set Up Python
         uses: actions/setup-python@v4
         with:
           python-version: '3.9'
-
       - name: 📦 Install Dependencies
         run: |
-          pip install --upgrade pip setuptools wheel  # Upgrade package tools
+          pip install --upgrade pip setuptools wheel
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-          pip install --no-cache-dir aiohttp==3.9.3  # Install specific versions
+          pip install --no-cache-dir aiohttp==3.9.3
           pip install --no-cache-dir PyGithub crewai groq
   
-
       - name: 🚀 Run Python Script
         env:
-          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}  # ✅ Pass API key to script
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
           G_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          echo "Repository: $GITHUB_REPOSITORY"
-          echo "Ref: $GITHUB_REF"
-          python main.py
-
+        run: python main.py
+      
       - name: ⬆️ Commit and Push Changes (if any)
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GIT_EMAIL: ${{ secrets.GIT_EMAIL }}
-          GIT_USERNAME: ${{ secrets.GIT_USERNAME }}
         run: |
-          git config --global user.email "${{ secrets.GIT_EMAIL }}"
-          git config --global user.name "${{ secrets.GIT_USERNAME }}"
+          git config user.name github-actions
+          git config user.email github-actions@github.com
           git add .
           git diff --staged --quiet || git commit -m "🔄 Auto-update: Commit latest changes"
-          git push https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git main
+          git push
