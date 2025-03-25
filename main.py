@@ -153,7 +153,7 @@ def extract_number(fname):
     match = re.search(r"chapter(\d+)_", fname)
     return int(match.group(1)) if match else 0
     
-ddef main():
+def main():
     plan_filename = "book_plan.md"
     plan_content = read_file(plan_filename)
 
