@@ -17,7 +17,7 @@ load_dotenv()
 # Define LLM Model
 llm = ChatGroq(
     temperature=0,
-    model_name="gemma2-9b-it",
+    model_name="deepseek-r1-distill-llama-70b",
     api_key=os.getenv('GROQ_API_KEY'),
 )
 
