@@ -37,4 +37,5 @@ jobs:
           git config user.email github-actions@github.com
           git add .
           git diff --staged --quiet || git commit -m "🔄 Auto-update: Commit latest changes"
+          git pull --rebase  # Add this line to pull and rebase before pushing
           git push
