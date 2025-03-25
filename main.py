@@ -17,8 +17,8 @@ load_dotenv()
 # Define LLM Model
 llm = ChatGroq(
     temperature=0,
-    model_name="groq/gemma2-9b-it",
-    api_key="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",
+    model_name="groq/qwen-qwq-32b",
+    api_key=os.getenv('GROQ_API_KEY'),
 )
 
 # Set your GitHub token in an environment variable or here:
