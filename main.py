@@ -23,8 +23,8 @@ llm = ChatGroq(
 
 # Set your GitHub token in an environment variable or here:
 GITHUB_TOKEN = os.getenv('G_TOKEN')
-GITHUB_USERNAME = "yash25112003"
-REPO_OWNER = "yash25112003"
+GITHUB_USERNAME = "GITHUB_USERNAME"
+REPO_OWNER = "REPO_OWNER_NAME"
 REPO_NAME_PART = "ai-book-writer"
 REPO_FULL_NAME = f"{REPO_OWNER}/{REPO_NAME_PART}"
 BRANCH = "main"  # Change if using a different branch
